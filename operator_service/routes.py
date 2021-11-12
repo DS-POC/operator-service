@@ -337,3 +337,39 @@ def get_running_jobs():
         msg = f'Error getting the status: {e}'
         logger.error(msg)
         return jsonify(error=msg), 400
+
+@services.route('/pastjobs', methods=['GET'])
+def get_past_jobs():
+    """
+    Get past jobs from a specific timestamp with a limit.
+    ---
+    tags:
+      - operation
+    consumes:
+      - application/json
+    parameters:
+      - name: timestamp
+        in: query
+        description: Match jobs with dateFinished at least timestamp.
+        type: number
+      - name: limit
+        in: query
+        description: Max number of results.
+        type: number
+    responses:
+      200:
+        description: Past jobs
+      400:
+        description: Error
+    """
+    try:
+        data = request.args if request.args else request.json
+        timestamp = data.get('timestamp',0)
+        limit = data.get('limit',100)
+        api_response = get_sql_past_jobs(timestamp, limit)
+        return jsonify(api_response), 200
+
+    except ApiException as e:
+        msg = f'Error getting past jobs: {e}'
+        logger.error(msg)
+        return jsonify(error=msg), 400
