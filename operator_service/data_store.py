@@ -132,6 +132,42 @@ def get_sql_running_jobs():
         result.append(temprow)
     return result
 
+def get_sql_past_jobs(from_timestamp, limit):
+    # enforce strings
+    params = dict()
+    select_query = '''
+    SELECT agreementId, workflowId, owner, status, statusText, 
+        extract(epoch from dateCreated) as dateCreated, 
+        namespace,workflow FROM jobs WHERE dateFinished IS NOT NULL AND dateFinished>=%(dateFinished)s ORDER by dateFinished DESC LIMIT %(limit)s
+    '''
+    params['dateFinished'] = from_timestamp
+    params['limit'] = limit
+    result = []
+    rows = _execute_query(select_query, params, 'get_sql_status', get_rows=True)
+    if not rows:
+        return result
+    for row in rows:
+        temprow = dict()
+        temprow['agreementId'] = row[0]
+        temprow['jobId'] = row[1]
+        temprow['owner'] = row[2]
+        temprow['status'] = row[3]
+        temprow['statusText'] = row[4]
+        temprow['dateCreated'] = row[5]
+        temprow['namespace'] = row[6]
+        workflow_dict=json.loads(row[7])
+        stage=workflow_dict['spec']['metadata']['stages'][0]
+        if 'id' in stage['algorithm']:
+            temprow['algoDID'] = stage['algorithm']['id']
+        else:
+            temprow['algoDID'] = 'raw'
+        temprow['inputDID']=list()
+        for input in stage['input']:
+            if 'id' in input:
+                temprow['inputDID'].append(input['id'])
+        result.append(temprow)
+    return result
+
 
 def create_sql_job(agreement_id, job_id, owner, body, namespace):
     postgres_insert_query = """
