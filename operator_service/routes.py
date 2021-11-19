@@ -1,13 +1,14 @@
 import os
 from os import path
 import logging
+import time
 
 import kubernetes
 from flask import Blueprint, jsonify, request
 from kubernetes.client.rest import ApiException
 
 from operator_service.config import Config
-from operator_service.data_store import create_sql_job, get_sql_status, get_sql_jobs, stop_sql_job, remove_sql_job, get_sql_running_jobs
+from operator_service.data_store import create_sql_job, get_sql_status, get_sql_jobs, stop_sql_job, remove_sql_job, get_sql_running_jobs, get_sql_past_jobs
 from operator_service.kubernetes_api import KubeAPI
 from operator_service.utils import (
     create_compute_job,
@@ -364,7 +365,7 @@ def get_past_jobs():
     """
     try:
         data = request.args if request.args else request.json
-        timestamp = data.get('timestamp',0)
+        timestamp = data.get('timestamp',time.time())
         limit = data.get('limit',100)
         api_response = get_sql_past_jobs(timestamp, limit)
         return jsonify(api_response), 200
