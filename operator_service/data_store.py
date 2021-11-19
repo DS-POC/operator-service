@@ -137,7 +137,8 @@ def get_sql_past_jobs(from_timestamp, limit):
     params = dict()
     select_query = '''
     SELECT agreementId, workflowId, owner, status, statusText, 
-        extract(epoch from dateCreated) as dateCreated, 
+        extract(epoch from dateCreated) as dateCreated,
+        extract(epoch from dateFinished) as dateFinished,
         namespace,workflow FROM jobs WHERE dateFinished IS NOT NULL AND %(dateFinished)s > extract(epoch from dateFinished) ORDER by dateFinished DESC LIMIT %(limit)s
     '''
     params['dateFinished'] = from_timestamp
@@ -154,8 +155,9 @@ def get_sql_past_jobs(from_timestamp, limit):
         temprow['status'] = row[3]
         temprow['statusText'] = row[4]
         temprow['dateCreated'] = row[5]
-        temprow['namespace'] = row[6]
-        workflow_dict=json.loads(row[7])
+        temprow['dateFinished'] = row[6]
+        temprow['namespace'] = row[7]
+        workflow_dict=json.loads(row[8])
         stage=workflow_dict['spec']['metadata']['stages'][0]
         if 'id' in stage['algorithm']:
             temprow['algoDID'] = stage['algorithm']['id']
