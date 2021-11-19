@@ -138,7 +138,7 @@ def get_sql_past_jobs(from_timestamp, limit):
     select_query = '''
     SELECT agreementId, workflowId, owner, status, statusText, 
         extract(epoch from dateCreated) as dateCreated, 
-        namespace,workflow FROM jobs WHERE dateFinished IS NOT NULL AND dateFinished < %(dateFinished)s ORDER by dateFinished DESC LIMIT %(limit)s
+        namespace,workflow FROM jobs WHERE dateFinished IS NOT NULL AND %(dateFinished)s > extract(epoch from dateFinished) ORDER by dateFinished DESC LIMIT %(limit)s
     '''
     params['dateFinished'] = from_timestamp
     params['limit'] = limit
